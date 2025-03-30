@@ -1,0 +1,125 @@
+from dash import callback, Output, Input, State
+from datetime import datetime
+import numpy as np
+from typing import cast
+import pandas as pd
+import plotly.graph_objs as go
+import plotly.io as pio
+from sklearn.decomposition import PCA
+from openbb import obb
+
+obb.user.preferences.output_type = "dataframe"  # type: ignore
+
+pio.templates.default = "plotly"
+
+
+def register_callbacks():
+    """
+    Register callbacks for PCA analysis page.
+    """
+
+    @callback(
+        [
+            Output("bar-chart", "figure"),
+            Output("line-plot", "figure"),
+            Output("scatter-plot", "figure"),
+        ],
+        [
+            Input("submit-button", "n_clicks"),
+            Input("ticker-input", "n_submit"),
+        ],
+        [
+            State("ticker-input", "value"),
+            State("components-dropdown", "value"),
+            State("date-picker", "start_date"),
+            State("date-picker", "end_date"),
+        ],
+    )
+    def update_graphs(
+        n_clicks, ticker_input_submit, tickers, n_components, start_date, end_date
+    ):
+        if n_clicks is None and ticker_input_submit is None:
+            return {}, {}, {}
+        # Clean and validate ticker symbols
+        tickers = [
+            ticker.strip().upper()  # Remove whitespace and convert to uppercase
+            for ticker in tickers.split(",")
+            if ticker.strip()  # Filter out empty strings
+        ]
+
+        if not tickers:
+            raise ValueError("No valid tickers provided")
+
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        data = obb.equity.price.historical(  # type: ignore
+            tickers, start_date=start_date, end_date=end_date, provider="yfinance"
+        )
+        data = cast(pd.DataFrame, data)
+
+        data = data.pivot(columns="symbol", values="close")
+        daily_returns = data.pct_change().dropna()
+
+        pca = PCA(n_components=n_components)
+        pca.fit(daily_returns)
+        explained_var_ratio = pca.explained_variance_ratio_
+
+        bar_chart = go.Figure(
+            data=[
+                go.Bar(
+                    x=["PC" + str(i + 1) for i in range(n_components)],
+                    y=explained_var_ratio,
+                )
+            ],
+            layout=go.Layout(
+                title="Explained Variance by Components",
+                xaxis=dict(title="Principal Components"),
+                yaxis=dict(title="Explained Variance"),
+            ),
+        )
+        cumulative_var_ratio = np.cumsum(explained_var_ratio)
+        line_chart = go.Figure(
+            data=[
+                go.Scatter(
+                    x=["PC" + str(i + 1) for i in range(n_components)],
+                    y=cumulative_var_ratio,
+                    mode="lines+markers",
+                )
+            ],
+            layout=go.Layout(
+                title="Cumulative Explained Variance",
+                xaxis=dict(title="Principal Components"),
+                yaxis=dict(title="Cumulative Explained Variance"),
+            ),
+        )
+        X = np.asarray(daily_returns)
+        factor_returns = pd.DataFrame(
+            columns=["f" + str(i + 1) for i in range(n_components)],
+            index=daily_returns.index,
+            data=X.dot(pca.components_.T),
+        )
+        factor_exposures = pd.DataFrame(
+            index=["f" + str(i + 1) for i in range(n_components)],
+            columns=daily_returns.columns,
+            data=pca.components_,
+        ).T
+        labels = factor_exposures.index
+        data = factor_exposures.values
+
+        scatter_plot = go.Figure(
+            data=[
+                go.Scatter(
+                    x=factor_exposures["f1"],
+                    y=factor_exposures["f2"],
+                    mode="markers+text",
+                    text=labels,
+                    textposition="top center",
+                )
+            ],
+            layout=go.Layout(
+                title="Scatter Plot of First Two Factors",
+                xaxis=dict(title="Factor 1"),
+                yaxis=dict(title="Factor 2"),
+            ),
+        )
+        return bar_chart, line_chart, scatter_plot
