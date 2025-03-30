@@ -16,9 +16,20 @@ from utils.utils import Logger
 from services.snow import SnowflakeConnector
 from openbb import obb
 
-load_dotenv()
+
 obb.account.login(pat=os.getenv("OPENBB_PERSONAL_ACCESS_TOKEN"), remember_me=True)  # type: ignore
 # external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+is_heroku = "DYNO" in os.environ  # True if running on Heroku, False if local
+
+if is_heroku:
+    # Production environment (Heroku)
+    print("Running on Heroku!")
+    # Place any Heroku-specific config here
+else:
+    # Local environment
+    load_dotenv()
+    print("Running locally.")
+    # Place any local development config here
 
 
 def custom_error_handler(err):
