@@ -8,19 +8,28 @@ import inspect
 from datetime import datetime, timedelta
 import pandas as pd
 
+
 def parse_file_contents(contents, filename):
-    content_type, content_string = contents.split(',')
+    content_type, content_string = contents.split(",")
     decoded = base64.b64decode(content_string)
 
     try:
-        if filename.endswith('.csv'):
-            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
-        elif filename.endswith(('.xls', '.xlsx')):
+        if filename.endswith(".csv"):
+            df = pd.read_csv(io.StringIO(decoded.decode("utf-8")))
+        elif filename.endswith((".xls", ".xlsx")):
             df = pd.read_excel(io.BytesIO(decoded))
         else:
-            return html.Div(['Unsupported file format'])
+            return html.Div(["Unsupported file format"])
     except Exception as e:
-        return html.Div(['Error processing file.'])
+        return html.Div(["Error processing file."])
+
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
 def time_function(func):

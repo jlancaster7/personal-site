@@ -13,6 +13,8 @@ obb.user.preferences.output_type = "dataframe"  # type: ignore
 
 pio.templates.default = "plotly"
 
+page_prefix = "pca-"
+
 
 def register_callbacks():
     """
@@ -21,21 +23,21 @@ def register_callbacks():
 
     @callback(
         [
-            Output("bar-chart", "figure"),
-            Output("line-plot", "figure"),
-            Output("scatter-plot", "figure"),
-            Output("toast-message", "children"),
-            Output("toast-message", "is_open"),
+            Output(page_prefix + "bar-chart", "figure"),
+            Output(page_prefix + "line-plot", "figure"),
+            Output(page_prefix + "scatter-plot", "figure"),
+            Output(page_prefix + "toast-message", "children"),
+            Output(page_prefix + "toast-message", "is_open"),
         ],
         [
-            Input("submit-button", "n_clicks"),
-            Input("ticker-input", "n_submit"),
+            Input(page_prefix + "submit-button", "n_clicks"),
+            Input(page_prefix + "ticker-input", "n_submit"),
         ],
         [
-            State("ticker-input", "value"),
-            State("components-dropdown", "value"),
-            State("date-picker", "start_date"),
-            State("date-picker", "end_date"),
+            State(page_prefix + "ticker-input", "value"),
+            State(page_prefix + "components-dropdown", "value"),
+            State(page_prefix + "date-picker", "start_date"),
+            State(page_prefix + "date-picker", "end_date"),
         ],
     )
     def update_graphs(

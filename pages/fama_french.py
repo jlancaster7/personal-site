@@ -2,14 +2,19 @@ import dash
 from dash import html, dcc
 from datetime import datetime, timedelta
 
-from callbacks.pca import register_callbacks, page_prefix
+from callbacks.fama_french import register_callbacks, page_prefix
 import dash_bootstrap_components as dbc
 
 # from components.base_card import base_card
 # from components.tables.portfolio import generate_user_portfolio_table
 
-dash.register_page(__name__, path="/pca", name="PCA", title="PCA", order=1)
-
+dash.register_page(
+    __name__,
+    path="/f-f-portfolio",
+    name="Fama French Portfolio",
+    title="Fama French Portfolio",
+    order=2,
+)
 ticker_field = [
     html.Label("Enter Ticker Symbols:"),
     dcc.Input(
@@ -19,17 +24,35 @@ ticker_field = [
         style={"width": "50%"},
     ),
 ]
-components_field = [
-    html.Label("Select Number of Components:"),
+ticker_weights_field = [
+    html.Label("Enter Weights for each Ticker:"),
+    dcc.Input(
+        id=page_prefix + "weights-input",
+        type="text",
+        placeholder="Enter weights, as decimals, separated by commas",
+        style={"width": "50%"},
+    ),
+]
+
+model_field = [
+    html.Label("Select which model to use:"),
     dcc.Dropdown(
-        id=page_prefix + "components-dropdown",
-        options=[{"label": str(i), "value": i} for i in range(1, 6)],
-        value=2,
+        id=page_prefix + "model-dropdown",
+        options=[
+            {"label": str(i), "value": i}
+            for i in [
+                # 'CAPM',
+                "FF3",
+                "FF5",
+            ]
+        ],
+        value="FF3",
         clearable=False,
         # multi=False,
         style={"width": "50%"},
     ),
 ]
+
 date_picker_field = [
     html.Label("Select Date Range:"),
     dcc.DatePickerRange(
@@ -40,33 +63,44 @@ date_picker_field = [
     ),
 ]
 submit = [html.Button("Submit", id=page_prefix + "submit-button")]
+
 register_callbacks()
 
 
 def layout():
-
     return dbc.Container(
-        [
-            html.H1("PCA Analysis of Stock Returns"),
+        children=[
+            html.H1("Fama French Portfolio Analysis"),
             dbc.Row([dbc.Col(ticker_field)]),
-            dbc.Row([dbc.Col(components_field)]),
+            dbc.Row([dbc.Col(ticker_weights_field)]),
+            dbc.Row([dbc.Col(model_field)]),
             dbc.Row([dbc.Col(date_picker_field)]),
             dbc.Row([dbc.Col(submit)]),
             dbc.Row(
                 style={
                     "display": "grid",
                     "gridAutoFlow": "column",
-                    "gridTemplateColumns": "33% 33% 33%",
+                    "gridTemplateColumns": "100%",
+                    "minHeight": "300px",
                 },
                 children=[
-                    dbc.Col([dcc.Graph(id=page_prefix + "bar-chart")], width=4),
-                    dbc.Col([dcc.Graph(id=page_prefix + "line-plot")], width=4),
-                    dbc.Col([dcc.Graph(id=page_prefix + "scatter-plot")], width=4),
+                    dbc.Spinner(
+                        children=html.Pre(
+                            id=page_prefix + "text-output-pre", children=""
+                        ),
+                        color="primary",
+                        type="border",
+                        spinner_style={
+                            "width": "3rem",
+                            "height": "3rem",
+                        },
+                    ),
                 ],
             ),
             dbc.Toast(
                 id=page_prefix + "toast-message",
                 header="Input Error",
+                # icon="danger",
                 duration=4000,
                 is_open=False,
                 style={
