@@ -1,4 +1,4 @@
-from dash import callback, Output, Input, State
+from dash import callback, Output, Input, State, no_update
 from datetime import datetime
 import numpy as np
 from typing import cast
@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 import plotly.io as pio
 from sklearn.decomposition import PCA
 from openbb import obb
+import dash_bootstrap_components as dbc
 
 obb.user.preferences.output_type = "dataframe"  # type: ignore
 
@@ -23,6 +24,8 @@ def register_callbacks():
             Output("bar-chart", "figure"),
             Output("line-plot", "figure"),
             Output("scatter-plot", "figure"),
+            Output("toast-message", "children"),
+            Output("toast-message", "is_open"),
         ],
         [
             Input("submit-button", "n_clicks"),
@@ -39,8 +42,10 @@ def register_callbacks():
         n_clicks, ticker_input_submit, tickers, n_components, start_date, end_date
     ):
         if n_clicks is None and ticker_input_submit is None:
-            return {}, {}, {}
+            return {}, {}, {}, no_update, no_update
         # Clean and validate ticker symbols
+        if not tickers:
+            return {}, {}, {}, "Please enter at least one valid ticker symbol.", True
         tickers = [
             ticker.strip().upper()  # Remove whitespace and convert to uppercase
             for ticker in tickers.split(",")
@@ -48,7 +53,10 @@ def register_callbacks():
         ]
 
         if not tickers:
-            raise ValueError("No valid tickers provided")
+            return {}, {}, {}, "Please enter at least one valid ticker symbol.", True
+
+        if len(tickers) < n_components:
+            return {}, {}, {}, "Number of componets exceeds number of tickers.", True
 
         start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -110,7 +118,11 @@ def register_callbacks():
             data=[
                 go.Scatter(
                     x=factor_exposures["f1"],
-                    y=factor_exposures["f2"],
+                    y=(
+                        factor_exposures["f2"]
+                        if n_components > 1
+                        else np.zeros(len(factor_exposures))
+                    ),
                     mode="markers+text",
                     text=labels,
                     textposition="top center",
@@ -119,7 +131,11 @@ def register_callbacks():
             layout=go.Layout(
                 title="Scatter Plot of First Two Factors",
                 xaxis=dict(title="Factor 1"),
-                yaxis=dict(title="Factor 2"),
+                yaxis=(
+                    dict(title="Factor 2")
+                    if n_components > 1
+                    else dict(title="Factor 2 (Zero)")
+                ),
             ),
         )
-        return bar_chart, line_chart, scatter_plot
+        return bar_chart, line_chart, scatter_plot, no_update, False

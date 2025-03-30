@@ -34,20 +34,20 @@ class SnowflakeConnector(BaseClass):
         )
         self.logger.info(f"Connected to snowflake db as {user}. Account={account}")
         return conn
+
     def get_user_portfolios(self, user_id: int) -> DataFrame:
         query = self._load_sql("sql/user_portfolios.sql")
-        query = query.format(
-            user_id=user_id
-        )
+        query = query.format(user_id=user_id)
         result = self._query(query)
         return result
+
     def get_most_recent_prices(self, ticker_list: list[str]) -> DataFrame:
-        ticker_list_str = '(' + ', '.join(["'" + ticker + "'" for ticker in ticker_list]) + ')'
+        ticker_list_str = (
+            "(" + ", ".join(["'" + ticker + "'" for ticker in ticker_list]) + ")"
+        )
 
         query = self._load_sql("sql/most_recent_stock_prices.sql")
-        query = query.format(
-            ticker_list=ticker_list_str
-        )
+        query = query.format(ticker_list=ticker_list_str)
         result = self._query(query)
         return result
 

@@ -47,6 +47,7 @@ def custom_error_handler(err):
 app = Dash(
     __name__,
     use_pages=True,
+    # pages_folder="pages",
     suppress_callback_exceptions=True,
     title="Testing Grounds",
     on_error=custom_error_handler,
@@ -111,4 +112,7 @@ def initialize_header(_):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if is_heroku:
+        app.run(debug=False)
+    else:
+        app.run(debug=True)

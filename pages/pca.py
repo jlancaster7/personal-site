@@ -25,6 +25,7 @@ components_field = [
         id="components-dropdown",
         options=[{"label": str(i), "value": i} for i in range(1, 6)],
         value=2,
+        clearable=False,
         # multi=False,
         style={"width": "50%"},
     ),
@@ -62,6 +63,36 @@ def layout():
                     dbc.Col([dcc.Graph(id="line-plot")], width=4),
                     dbc.Col([dcc.Graph(id="scatter-plot")], width=4),
                 ],
+            ),
+            dbc.Toast(
+                id="toast-message",
+                header="Input Error",
+                # icon="danger",
+                duration=4000,
+                is_open=False,
+                style={
+                    "position": "fixed",
+                    "top": 20,
+                    "left": "50%",
+                    "transform": "translateX(-50%)",
+                    "width": "300px",
+                    "backgroundColor": "#f8d7da",
+                    "color": "#721c24",
+                    "border": "1px solid #f5c6cb",
+                    "borderRadius": "5px",
+                    "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                    "padding": "15px",  # Added padding for text
+                },
+                # dismissable=True,
+                header_style={
+                    "color": "#721c24",
+                    "fontWeight": "bold",
+                    "borderBottom": "1px solid #f5c6cb",
+                    "paddingBottom": "10px",  # Added padding for header
+                },
+                body_style={
+                    "paddingTop": "10px",  # Added padding for body text
+                },
             ),
         ]
     )
