@@ -185,7 +185,6 @@ def register_callbacks():
             data=pca.components_,
         ).T
         labels = factor_exposures.index
-        # data = factor_exposures.values
 
         bar_chart, line_chart, scatter_plot = create_charts(
             explained_var_ratio,

@@ -49,7 +49,6 @@ model_field = [
         ],
         value="FF3",
         clearable=False,
-        # multi=False,
         style={"height": "40px", "width": "300px", "fontSize": "14px"},
     ),
 ]

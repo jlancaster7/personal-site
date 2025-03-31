@@ -1,5 +1,6 @@
 import dash
-from dash import html
+from dash import html, dcc
+
 
 from components.base_card import base_card
 
@@ -22,12 +23,11 @@ layout = html.Div(
                         "rowGap": "10px",
                     },
                     children=[
-                        html.A("Go to PCA", href="/pca", className="btn btn-primary"),
-                        html.A(
-                            children="Go to Fama French Regression",
-                            # children=html.Button("Go to Fama French Regression"),
+                        dcc.Link("Go to PCA", href="/pca", style={"display": "block"}),
+                        dcc.Link(
+                            "Go to Factor Analysis",
                             href="/f-f-portfolio",
-                            className="btn btn-secondary",
+                            style={"display": "block"},
                         ),
                     ],
                 ),

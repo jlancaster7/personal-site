@@ -9,6 +9,7 @@ from dash import (
     State,
     page_container,
     page_registry,
+    callback_context,
 )
 import os
 import traceback
@@ -94,6 +95,10 @@ app.layout = html.Div(
     style={"backgroundColor": "#f9f9f9"},
     children=[
         html.Div(id="page-load-callback-initializer", style={"display": "none"}),
+        # 1) Track the current page, so we know when someone has navigated.
+        dcc.Location(id="url", refresh=False),
+        # 2) Keep track of whether the sidebar is open (True) or closed (False)
+        dcc.Store(id="sidebar-open", data=False),
         html.Div(
             id="sidebar",
             style=sidebar_style,
@@ -190,62 +195,70 @@ app.layout = html.Div(
         Output("sidebar", "style"),
         Output("page-header", "style"),
         Output("content", "style"),
+        Output("sidebar-open", "data"),  # updated open/closed state
     ],
-    [Input("sidebar-toggle", "n_clicks")],
     [
+        Input("sidebar-toggle", "n_clicks"),
+        Input("url", "pathname"),
+    ],
+    [  # triggers if the user navigates],
         State("sidebar", "style"),
         State("page-header", "style"),
         State("content", "style"),
+        State("sidebar-open", "data"),  # the old open/closed state
     ],
 )
 def toggle_sidebar(
-    n_clicks, sidebar_style_state, page_header_style_state, content_style_state
+    n_clicks,
+    pathname,
+    sidebar_style_state,
+    page_header_style_state,
+    content_style_state,
+    is_open,
 ):
     """
-    Toggle the sidebar in or out by adjusting the margin-left of both the sidebar and the content.
+    1) If user navigates (i.e., url changes), automatically close the sidebar.
+    2) Otherwise, if user clicks the toggle, flip the current open/closed state.
     """
-    if n_clicks % 2 == 1:
-        # Slide the sidebar into view
-        sidebar_style_state["marginLeft"] = "0px"
-        # Push the content to the right
-        content_style_state["marginLeft"] = "250px"
-        page_header_style_state["marginLeft"] = "250px"
+
+    ctx = callback_context
+
+    if not ctx.triggered:
+        # no triggers => just return the same state
+        return (
+            sidebar_style_state,
+            page_header_style_state,
+            content_style_state,
+            is_open,
+        )
+
+    triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    # Make copies of the style dictionaries so we don't mutate them in place
+    new_sidebar_style = sidebar_style_state.copy()
+    new_page_header_style = page_header_style_state.copy()
+    new_content_style = content_style_state.copy()
+
+    if triggered_id == "url":
+        # user navigated => force close the sidebar
+        new_sidebar_style["marginLeft"] = "-250px"
+        new_content_style["marginLeft"] = "0px"
+        new_page_header_style["marginLeft"] = "0px"
+        return new_sidebar_style, new_page_header_style, new_content_style, False
+
     else:
-        # Slide the sidebar out of view
-        sidebar_style_state["marginLeft"] = "-250px"
-        # Reset the content margin
-        content_style_state["marginLeft"] = "0px"
-        page_header_style_state["marginLeft"] = "0px"
+        # user clicked the toggle button => flip open vs. closed
+        new_is_open = not is_open
+        if new_is_open:
+            new_sidebar_style["marginLeft"] = "0px"
+            new_content_style["marginLeft"] = "250px"
+            new_page_header_style["marginLeft"] = "250px"
+        else:
+            new_sidebar_style["marginLeft"] = "-250px"
+            new_content_style["marginLeft"] = "0px"
+            new_page_header_style["marginLeft"] = "0px"
 
-    return sidebar_style_state, page_header_style_state, content_style_state
-
-
-# @callback(
-#     Output("page-header", "children"),
-#     Input("page-load-callback-initializer", "children"),
-# )
-# def initialize_header(_):
-#     return [
-#         html.Div(
-#             style={"display": "grid", "gridAutoFlow": "column"},
-#             children=[
-#                 html.H1(
-#                     style={
-#                         "display": "grid",
-#                         "width": "fit-content",
-#                         "whitespace": "nowrap",
-#                         "color": "white",
-#                         "padding": "8px",
-#                         "paddingRight": "24px",
-#                     },
-#                     children=dcc.Link(
-#                         href=page["relative_path"], children=f"{page['name']}"
-#                     ),
-#                 )
-#                 for page in page_registry.values()
-#             ],
-#         )
-#     ]
+        return new_sidebar_style, new_page_header_style, new_content_style, new_is_open
 
 
 if __name__ == "__main__":
