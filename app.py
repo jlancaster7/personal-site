@@ -19,7 +19,7 @@ import dash_bootstrap_components as dbc
 from openbb import obb
 
 
-obb.account.login(pat=os.getenv("OPENBB_PERSONAL_ACCESS_TOKEN"), remember_me=True)  # type: ignore
+
 # external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 is_heroku = "DYNO" in os.environ  # True if running on Heroku, False if local
 
@@ -33,7 +33,7 @@ else:
     load_dotenv()
     print("Running locally.")
     # Place any local development config here
-
+obb.account.login(pat=os.getenv("OPENBB_PERSONAL_ACCESS_TOKEN"), remember_me=True)  # type: ignore
 
 def custom_error_handler(err):
     my_logger = Logger("Custom Dash Error Handler")
