@@ -78,7 +78,7 @@ sidebar_style = {
 page_header_style = {
     "display": "grid",
     "gridAutoFlow": "column",
-    "gridTemplateColumns": "100%",
+    "gridTemplateColumns": "min-content 1fr",
     "backgroundColor": "#023020",
     "color": "white",
     "marginLeft": "0px",
@@ -90,6 +90,8 @@ content_style = {
     "transition": "margin-left 0.3s",
     "padding": "20px",
 }
+
+page_list = [page for page in page_registry.values()]  # if page["name"] != "Home"
 
 app.layout = html.Div(
     style={"backgroundColor": "#f9f9f9"},
@@ -112,15 +114,12 @@ app.layout = html.Div(
                         html.Hr(),
                         html.Div(
                             [
-                                dcc.Link("Home", href="/", style={"display": "block"}),
                                 dcc.Link(
-                                    "PCA", href="/pca", style={"display": "block"}
-                                ),
-                                dcc.Link(
-                                    "Factor Analysis",
-                                    href="/f-f-portfolio",
+                                    page["name"],
+                                    href=page["path"],
                                     style={"display": "block"},
-                                ),
+                                )
+                                for page in page_list
                             ]
                         ),
                     ],
@@ -137,6 +136,7 @@ app.layout = html.Div(
                     n_clicks=0,
                     style={
                         "fontSize": "1.2rem",
+                        "textAlign": "center",
                         "cursor": "pointer",
                         "border": "none",
                         "color": "white",
@@ -147,6 +147,18 @@ app.layout = html.Div(
                         "width": "40px",  # Set desired width
                         "height": "40px",  # Set desired height
                     },
+                ),
+                html.H1(
+                    id="page-header-title",
+                    style={
+                        "textAlign": "center",
+                        "zIndex": "1000",
+                        "color": "white",
+                        # "fontSize": "2rem",
+                        "marginTop": "10px",
+                        "marginBottom": "10px",
+                    },
+                    children="Testing Grounds",
                 ),
             ],
         ),
@@ -259,6 +271,17 @@ def toggle_sidebar(
             new_page_header_style["marginLeft"] = "0px"
 
         return new_sidebar_style, new_page_header_style, new_content_style, new_is_open
+
+
+@app.callback(
+    Output("page-header-title", "children"),
+    Input("url", "pathname"),
+)
+def update_page_title(pathname):
+    for page in page_registry.values():
+        if page["path"] == pathname:
+            return page["name"]
+    return "Testing Grounds"  # default fallback
 
 
 if __name__ == "__main__":
