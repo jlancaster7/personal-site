@@ -94,7 +94,7 @@ def layout():
                 ],
             ),
             base_card(
-                id=page_prefix + "inputs-card",
+                id=page_prefix + "charts-card",
                 card_style={
                     "display": "grid",
                     "gridAutoFlow": "column",
