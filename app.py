@@ -13,7 +13,7 @@ import os
 import traceback
 from dotenv import load_dotenv
 from utils.utils import Logger
-from services.snow import SnowflakeConnector
+import dash_bootstrap_components as dbc
 from openbb import obb
 
 
@@ -40,14 +40,17 @@ def custom_error_handler(err):
     """
     my_logger.error(body)
     set_props(
-        "error-output-div", dict(style={"display": "grid", "justifyContent": "center"})
+        "toast-message",
+        dict(
+            is_open=True,
+            children="An error has occurred. Contact lancaster.joshua.c@gmail.com.",
+        ),
     )
 
 
 app = Dash(
     __name__,
     use_pages=True,
-    # pages_folder="pages",
     suppress_callback_exceptions=True,
     title="Testing Grounds",
     on_error=custom_error_handler,
@@ -73,12 +76,36 @@ app.layout = html.Div(
                 )
             ]
         ),
-        html.Div(
-            id="error-output-div",
-            style={"display": "none", "color": "red", "fontSize": "30px"},
-            children="An error has occurred. Contact lancaster.joshua.c@gmail.com.",
-        ),
         page_container,
+        dbc.Toast(
+            id="toast-message",
+            header="Input Error",
+            duration=4000,
+            is_open=False,
+            style={
+                "position": "fixed",
+                "top": 20,
+                "left": "50%",
+                "transform": "translateX(-50%)",
+                "width": "300px",
+                "backgroundColor": "#f8d7da",
+                "color": "#721c24",
+                "border": "1px solid #f5c6cb",
+                "borderRadius": "5px",
+                "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                "padding": "15px",  # Added padding for text
+            },
+            # dismissable=True,
+            header_style={
+                "color": "#721c24",
+                "fontWeight": "bold",
+                "borderBottom": "1px solid #f5c6cb",
+                "paddingBottom": "10px",  # Added padding for header
+            },
+            body_style={
+                "paddingTop": "10px",  # Added padding for body text
+            },
+        ),
     ],
 )
 

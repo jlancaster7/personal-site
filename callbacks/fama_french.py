@@ -25,8 +25,8 @@ def register_callbacks():
     @callback(
         [
             Output(page_prefix + "text-output-pre", "children"),
-            Output(page_prefix + "toast-message", "children"),
-            Output(page_prefix + "toast-message", "is_open"),
+            Output("toast-message", "children", allow_duplicate=True),
+            Output("toast-message", "is_open", allow_duplicate=True),
         ],
         [
             Input(page_prefix + "submit-button", "n_clicks"),
@@ -40,6 +40,7 @@ def register_callbacks():
             State(page_prefix + "date-picker", "start_date"),
             State(page_prefix + "date-picker", "end_date"),
         ],
+        prevent_initial_call=True,
     )
     def update_tables(
         n_clicks,
@@ -85,10 +86,6 @@ def register_callbacks():
             )
         start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-        print(tickers)
-        print(weights)
-        print(start_date)
-        print(end_date)
 
         stock_prices = obb.equity.price.historical(  # type: ignore
             symbol=tickers, start_date=start_date, end_date=end_date

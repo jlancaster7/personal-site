@@ -3,6 +3,7 @@ from dash import html, dcc
 from datetime import datetime, timedelta
 
 from callbacks.pca import register_callbacks, page_prefix
+from components.base_card import base_card
 import dash_bootstrap_components as dbc
 
 # from components.base_card import base_card
@@ -16,7 +17,8 @@ ticker_field = [
         id=page_prefix + "ticker-input",
         type="text",
         placeholder="Enter tickers separated by commas",
-        style={"width": "50%"},
+        style={"height": "40px", "width": "300px", "fontSize": "14px"},
+        # style={"width": "50%"},
     ),
 ]
 components_field = [
@@ -27,7 +29,8 @@ components_field = [
         value=2,
         clearable=False,
         # multi=False,
-        style={"width": "50%"},
+        style={"height": "40px", "width": "300px", "fontSize": "14px"},
+        # style={"width": "50%"},
     ),
 ]
 date_picker_field = [
@@ -37,61 +40,94 @@ date_picker_field = [
         start_date=(datetime.now() - timedelta(days=365 * 3)).strftime("%Y-%m-%d"),
         end_date=(datetime.now()).strftime("%Y-%m-%d"),
         display_format="YYYY-MM-DD",
+        style={"height": "40px", "width": "300px", "fontSize": "14px !important"},
     ),
 ]
 submit = [html.Button("Submit", id=page_prefix + "submit-button")]
+
 register_callbacks()
 
 
 def layout():
 
-    return dbc.Container(
-        [
-            html.H1("PCA Analysis of Stock Returns"),
-            dbc.Row([dbc.Col(ticker_field)]),
-            dbc.Row([dbc.Col(components_field)]),
-            dbc.Row([dbc.Col(date_picker_field)]),
-            dbc.Row([dbc.Col(submit)]),
-            dbc.Row(
-                style={
+    return html.Div(
+        children=[
+            base_card(
+                id=page_prefix + "inputs-card",
+                card_style={
                     "display": "grid",
-                    "gridAutoFlow": "column",
-                    "gridTemplateColumns": "33% 33% 33%",
+                    "gridAutoFlow": "row",
+                    "rowGap": "10px",
                 },
                 children=[
-                    dbc.Col([dcc.Graph(id=page_prefix + "bar-chart")], width=4),
-                    dbc.Col([dcc.Graph(id=page_prefix + "line-plot")], width=4),
-                    dbc.Col([dcc.Graph(id=page_prefix + "scatter-plot")], width=4),
+                    html.H1(
+                        "PCA Analysis of Stock Returns",
+                        style={"marginTop": "0px", "marginBottom": "10px"},
+                    ),
+                    html.Div(
+                        style={
+                            "display": "grid",
+                            "gridAutoFlow": "column",
+                            "columnGap": "10px",
+                        },
+                        children=[
+                            html.Div(
+                                style={
+                                    "display": "grid",
+                                    "gridAutoFlow": "row",
+                                    "alignContent": "space-between",
+                                },
+                                children=ticker_field,
+                            ),
+                            html.Div(
+                                style={
+                                    "display": "grid",
+                                    "gridAutoFlow": "row",
+                                    "alignContent": "space-between",
+                                },
+                                children=components_field,
+                            ),
+                            html.Div(
+                                style={
+                                    "display": "grid",
+                                    "gridAutoFlow": "row",
+                                    "alignContent": "space-between",
+                                },
+                                children=date_picker_field,
+                            ),
+                        ],
+                    ),
+                    html.Div(children=submit),
                 ],
             ),
-            dbc.Toast(
-                id=page_prefix + "toast-message",
-                header="Input Error",
-                duration=4000,
-                is_open=False,
-                style={
-                    "position": "fixed",
-                    "top": 20,
-                    "left": "50%",
-                    "transform": "translateX(-50%)",
-                    "width": "300px",
-                    "backgroundColor": "#f8d7da",
-                    "color": "#721c24",
-                    "border": "1px solid #f5c6cb",
-                    "borderRadius": "5px",
-                    "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                    "padding": "15px",  # Added padding for text
+            base_card(
+                id=page_prefix + "inputs-card",
+                card_style={
+                    "display": "grid",
+                    "gridAutoFlow": "column",
+                    "gridTemplateColumns": "repeat(3, 1fr)",
+                    "columnGap": "10px",
                 },
-                # dismissable=True,
-                header_style={
-                    "color": "#721c24",
-                    "fontWeight": "bold",
-                    "borderBottom": "1px solid #f5c6cb",
-                    "paddingBottom": "10px",  # Added padding for header
-                },
-                body_style={
-                    "paddingTop": "10px",  # Added padding for body text
-                },
+                children=[
+                    html.Div(
+                        style={
+                            "borderRadius": "10px",
+                        },
+                        children=dcc.Graph(id=page_prefix + "bar-chart"),
+                    ),
+                    html.Div(
+                        style={
+                            "borderRadius": "10px",
+                        },
+                        children=dcc.Graph(id=page_prefix + "line-plot"),
+                    ),
+                    html.Div(
+                        style={
+                            "borderRadius": "10px",
+                        },
+                        children=dcc.Graph(id=page_prefix + "scatter-plot"),
+                    ),
+                ],
             ),
         ]
     )
