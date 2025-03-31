@@ -1,13 +1,13 @@
+from datetime import datetime, timedelta
 import dash
 from dash import html, dcc
-from datetime import datetime, timedelta
+
 
 from callbacks.pca import register_callbacks, page_prefix
 from components.base_card import base_card
+
 import dash_bootstrap_components as dbc
 
-# from components.base_card import base_card
-# from components.tables.portfolio import generate_user_portfolio_table
 
 dash.register_page(__name__, path="/pca", name="PCA", title="PCA", order=1)
 
@@ -18,7 +18,6 @@ ticker_field = [
         type="text",
         placeholder="Enter tickers separated by commas",
         style={"height": "40px", "width": "300px", "fontSize": "14px"},
-        # style={"width": "50%"},
     ),
 ]
 components_field = [
@@ -28,9 +27,7 @@ components_field = [
         options=[{"label": str(i), "value": i} for i in range(1, 6)],
         value=2,
         clearable=False,
-        # multi=False,
         style={"height": "40px", "width": "300px", "fontSize": "14px"},
-        # style={"width": "50%"},
     ),
 ]
 date_picker_field = [
@@ -43,7 +40,18 @@ date_picker_field = [
         style={"height": "40px", "width": "300px", "fontSize": "14px !important"},
     ),
 ]
+field_list = [
+    ticker_field,
+    components_field,
+    date_picker_field,
+]
 submit = [html.Button("Submit", id=page_prefix + "submit-button")]
+
+chart_list = [
+    "bar-chart",
+    "line-plot",
+    "scatter-plot",
+]
 
 register_callbacks()
 
@@ -77,24 +85,9 @@ def layout():
                                     "gridAutoFlow": "row",
                                     "alignContent": "space-between",
                                 },
-                                children=ticker_field,
-                            ),
-                            html.Div(
-                                style={
-                                    "display": "grid",
-                                    "gridAutoFlow": "row",
-                                    "alignContent": "space-between",
-                                },
-                                children=components_field,
-                            ),
-                            html.Div(
-                                style={
-                                    "display": "grid",
-                                    "gridAutoFlow": "row",
-                                    "alignContent": "space-between",
-                                },
-                                children=date_picker_field,
-                            ),
+                                children=field,
+                            )
+                            for field in field_list
                         ],
                     ),
                     html.Div(children=submit),
@@ -113,20 +106,9 @@ def layout():
                         style={
                             "borderRadius": "10px",
                         },
-                        children=dcc.Graph(id=page_prefix + "bar-chart"),
-                    ),
-                    html.Div(
-                        style={
-                            "borderRadius": "10px",
-                        },
-                        children=dcc.Graph(id=page_prefix + "line-plot"),
-                    ),
-                    html.Div(
-                        style={
-                            "borderRadius": "10px",
-                        },
-                        children=dcc.Graph(id=page_prefix + "scatter-plot"),
-                    ),
+                        children=dcc.Graph(id=page_prefix + chart),
+                    )
+                    for chart in chart_list
                 ],
             ),
         ]
