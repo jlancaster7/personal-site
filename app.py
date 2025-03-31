@@ -6,6 +6,7 @@ from dash import (
     Output,
     callback,
     set_props,
+    State,
     page_container,
     page_registry,
 )
@@ -20,6 +21,7 @@ from openbb import obb
 obb.account.login(pat=os.getenv("OPENBB_PERSONAL_ACCESS_TOKEN"), remember_me=True)  # type: ignore
 # external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 is_heroku = "DYNO" in os.environ  # True if running on Heroku, False if local
+
 
 if is_heroku:
     # Production environment (Heroku)
@@ -58,25 +60,98 @@ app = Dash(
 
 server = app.server
 
+# Simple CSS for the sidebar
+sidebar_style = {
+    "position": "fixed",
+    "top": 0,
+    "left": 0,
+    "height": "100%",
+    "width": "250px",  # The default width of the sidebar
+    # "padding": "20px",
+    "backgroundColor": "#f8f9fa",
+    "transition": "margin-left 0.3s",
+    # We'll initially slide it completely to the left by default,
+    # making it invisible on page load:
+    "marginLeft": "-250px",
+}
+page_header_style = {
+    "display": "grid",
+    "gridAutoFlow": "column",
+    "gridTemplateColumns": "100%",
+    "backgroundColor": "#023020",
+    "color": "white",
+    "marginLeft": "0px",
+    "transition": "margin-left 0.3s",
+}
+
+content_style = {
+    "marginLeft": "0px",
+    "transition": "margin-left 0.3s",
+    "padding": "20px",
+}
+
 app.layout = html.Div(
     style={"backgroundColor": "#f9f9f9"},
     children=[
         html.Div(id="page-load-callback-initializer", style={"display": "none"}),
         html.Div(
+            id="sidebar",
+            style=sidebar_style,
             children=[
                 html.Div(
-                    id="page-header",
                     style={
-                        "backgroundColor": "grey",
-                        "color": "white",
-                        "display": "grid",
-                        "gridAutoFlow": "column",
-                        "gridTemplateColumns": "50% 50%",
+                        "padding": "20px",
                     },
-                )
-            ]
+                    children=[
+                        html.H2("Sidebar Menu"),
+                        html.Hr(),
+                        html.Div(
+                            [
+                                dcc.Link("Home", href="/", style={"display": "block"}),
+                                dcc.Link(
+                                    "PCA", href="/pca", style={"display": "block"}
+                                ),
+                                dcc.Link(
+                                    "Factor Analysis",
+                                    href="/f-f-portfolio",
+                                    style={"display": "block"},
+                                ),
+                            ]
+                        ),
+                    ],
+                ),
+            ],
         ),
-        page_container,
+        html.Div(
+            id="page-header",
+            style=page_header_style,
+            children=[
+                html.Button(
+                    "☰",
+                    id="sidebar-toggle",
+                    n_clicks=0,
+                    style={
+                        "fontSize": "1.2rem",
+                        "cursor": "pointer",
+                        "border": "none",
+                        "color": "white",
+                        "zIndex": "1000",
+                        "background": "transparent",
+                        "marginBottom": "10px",
+                        "padding": "10px",  # Increase clickable area
+                        "width": "40px",  # Set desired width
+                        "height": "40px",  # Set desired height
+                    },
+                ),
+            ],
+        ),
+        html.Div(
+            id="content",
+            style=content_style,
+            children=[
+                page_container,
+            ],
+        ),
         dbc.Toast(
             id="toast-message",
             header="Input Error",
@@ -110,32 +185,67 @@ app.layout = html.Div(
 )
 
 
-@callback(
-    Output("page-header", "children"),
-    Input("page-load-callback-initializer", "children"),
+@app.callback(
+    [
+        Output("sidebar", "style"),
+        Output("page-header", "style"),
+        Output("content", "style"),
+    ],
+    [Input("sidebar-toggle", "n_clicks")],
+    [
+        State("sidebar", "style"),
+        State("page-header", "style"),
+        State("content", "style"),
+    ],
 )
-def initialize_header(_):
-    return [
-        html.Div(
-            style={"display": "grid", "gridAutoFlow": "column"},
-            children=[
-                html.H1(
-                    style={
-                        "display": "grid",
-                        "width": "fit-content",
-                        "whitespace": "nowrap",
-                        "color": "white",
-                        "padding": "8px",
-                        "paddingRight": "24px",
-                    },
-                    children=dcc.Link(
-                        href=page["relative_path"], children=f"{page['name']}"
-                    ),
-                )
-                for page in page_registry.values()
-            ],
-        )
-    ]
+def toggle_sidebar(
+    n_clicks, sidebar_style_state, page_header_style_state, content_style_state
+):
+    """
+    Toggle the sidebar in or out by adjusting the margin-left of both the sidebar and the content.
+    """
+    if n_clicks % 2 == 1:
+        # Slide the sidebar into view
+        sidebar_style_state["marginLeft"] = "0px"
+        # Push the content to the right
+        content_style_state["marginLeft"] = "250px"
+        page_header_style_state["marginLeft"] = "250px"
+    else:
+        # Slide the sidebar out of view
+        sidebar_style_state["marginLeft"] = "-250px"
+        # Reset the content margin
+        content_style_state["marginLeft"] = "0px"
+        page_header_style_state["marginLeft"] = "0px"
+
+    return sidebar_style_state, page_header_style_state, content_style_state
+
+
+# @callback(
+#     Output("page-header", "children"),
+#     Input("page-load-callback-initializer", "children"),
+# )
+# def initialize_header(_):
+#     return [
+#         html.Div(
+#             style={"display": "grid", "gridAutoFlow": "column"},
+#             children=[
+#                 html.H1(
+#                     style={
+#                         "display": "grid",
+#                         "width": "fit-content",
+#                         "whitespace": "nowrap",
+#                         "color": "white",
+#                         "padding": "8px",
+#                         "paddingRight": "24px",
+#                     },
+#                     children=dcc.Link(
+#                         href=page["relative_path"], children=f"{page['name']}"
+#                     ),
+#                 )
+#                 for page in page_registry.values()
+#             ],
+#         )
+#     ]
 
 
 if __name__ == "__main__":
