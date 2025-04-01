@@ -86,7 +86,6 @@ def layout():
                     "rowGap": "10px",
                 },
                 children=[
-                    html.H1("Fama French Portfolio Analysis"),
                     html.Div(
                         style={
                             "display": "grid",

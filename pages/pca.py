@@ -68,10 +68,6 @@ def layout():
                     "rowGap": "10px",
                 },
                 children=[
-                    html.H1(
-                        "PCA Analysis of Stock Returns",
-                        style={"marginTop": "0px", "marginBottom": "10px"},
-                    ),
                     html.Div(
                         style={
                             "display": "grid",
