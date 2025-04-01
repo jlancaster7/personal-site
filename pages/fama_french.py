@@ -131,5 +131,18 @@ def layout():
                     ),
                 ],
             ),
+            base_card(
+                id=page_prefix + "output-card",
+                card_style={
+                    "display": "grid",
+                    "gridAutoFlow": "row",
+                    "gridTemplateColumns": "100%",
+                    "minHeight": "400px",
+                },
+                children=[
+                    dcc.Graph(id=page_prefix + "rolling-coeffs-chart"),
+                    html.P('Rolling 60 day window',style={'fontSize': '12px', 'marginBottom': '0px'}),
+                ]
+            ),
         ]
     )
